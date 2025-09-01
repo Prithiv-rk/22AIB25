@@ -10,17 +10,19 @@ class ShortURL(BaseModel):
     validity:int
     shortcode:str
 @app.post("/shorten")
-def shorten_url(req:ShortURL,request:Request):
+def shorten_url(req:ShortURL, request:Request):
     if req.shortcode in url_store:
-        return {"error":"Shortcode already exists"}
-    expiration_time=datetime.now()+timedelta(seconds=req.validity)
-    url_store[req.shortcode]={"long_url":req.long_url,"expires_at":expiration_time}
-    host=request.base_url._url.rstrip("/")
-    return {"shortlink":f"{host}/{req.shortcode}",
-            "expiry":expiration_time}
+        return {"error": "Shortcode already exists"}
+    expiration_time = datetime.now().timestamp() + req.validity
+    url_store[req.shortcode] = {"long_url": req.long_url, "expires_at": expiration_time}
+    host = request.base_url._url.rstrip("/")
+    return {
+        "shortlink": f"{host}/{req.shortcode}",
+        "expiry": int(expiration_time)
+    }
 @app.get("/{shortcode}")
 def redirect(shortcode:str):
-    entry=url_store.get(shortcode)
-    if not entry or entry["expires_at"]<datetime.now().timestamp():
-        raise HTTPException(status_code=404,detail="Shortcode not found or expired")
-    return {"long_url":entry["long_url"]}
+    entry = url_store.get(shortcode)
+    if not entry or entry["expires_at"] < datetime.now().timestamp():
+        raise HTTPException(status_code=404, detail="Shortcode not found or expired")
+    return {"long_url": entry["long_url"]}
