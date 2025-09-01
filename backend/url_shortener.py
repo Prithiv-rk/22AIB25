@@ -16,9 +16,11 @@ def shorten_url(req:ShortURL, request:Request):
     expiration_time = datetime.now().timestamp() + req.validity
     url_store[req.shortcode] = {"long_url": req.long_url, "expires_at": expiration_time}
     host = request.base_url._url.rstrip("/")
+
+    expiry_iso = datetime.fromtimestamp(expiration_time).isoformat()
     return {
         "shortlink": f"{host}/{req.shortcode}",
-        "expiry": int(expiration_time)
+        "expiry": expiry_iso
     }
 @app.get("/{shortcode}")
 def redirect(shortcode:str):
